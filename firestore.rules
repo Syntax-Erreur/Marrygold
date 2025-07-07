@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && userId == request.auth.uid;
+    }
+
+    match /eventContent/{docId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Add similar rules for other collections
+    match /events/{docId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+
+    match /guests/{docId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+  }
+} 
