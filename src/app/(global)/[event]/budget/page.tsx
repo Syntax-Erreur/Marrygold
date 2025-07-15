@@ -260,7 +260,7 @@ const EventBudgetPage: React.FC = () => {
 
             <BudgetChart
               eventName={`${event.name} Budget`}
-              budget={`${event.totalSpending || 0}$/${event.budget || event.totalBudget || 0}$`}
+              budget={`${event.totalSpending || 0}$/${event.budget || 0}$`}
               iconSrc={getEventIcon(event.name)}
               paymentTypes={payments.map((payment, index) => ({
                 name: payment.name,
