@@ -1824,153 +1824,57 @@ const GuestList: React.FC = () => {
       setSelectedEvent(null);
     }
   };
+  const fetchTables = useCallback(async () => {
+    try {
+      setIsTableLoading(true);
+      const tablesRef = collection(db, "tables");
+      const q = query(
+        tablesRef,
+        where("userId", "==", auth.currentUser?.uid),
+        orderBy("createdAt", "asc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const tablesList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as unknown as TableAssignment[];
+
+      setTables(tablesList);
+    } catch (error) {
+      console.error("Error fetching tables:", error);
+      toast.error("Failed to load tables");
+    } finally {
+      setIsTableLoading(false);
+    }
+  }, []);
+  
+  const fetchGuests = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const guestsRef = collection(db, "guests");
+      const q = query(
+        guestsRef,
+        where("userId", "==", auth.currentUser?.uid),
+        orderBy("createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+
+      const guestList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Guest[];
+
+      setGuests(guestList);
+    } catch (error) {
+      console.error("Error fetching guests:", error);
+      toast.error("Failed to load guests");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchGuests = async () => {
-      try {
-        setIsLoading(true);
-        const guestsRef = collection(db, "guests")
-        const q = query(
-          guestsRef,
-          where("userId", "==", auth.currentUser?.uid),
-          orderBy("createdAt", "desc")
-        )
-        const querySnapshot = await getDocs(q)
-
-        const guestList = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Guest[]
-
-        if (guestList.length === 0) {
-          console.log("No guests found in database, using mock data")
-          setGuests(guestData)
-        } else {
-          setGuests(guestList)
-        }
-      } catch (error) {
-        console.error("Error fetching guests:", error)
-        toast.error("Failed to load guests")
-        setGuests(guestData)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    const fetchTables = async () => {
-      try {
-        setIsTableLoading(true);
-        
-        if (!auth.currentUser) {
-          // Use mock tables for demo
-          const mockTables: TableAssignment[] = [
-            {
-              id: "table_mock_1",
-              userId: "mockUserId",
-              name: "Table 1",
-              capacity: 8,
-              guests: [],
-              createdAt: new Date().toISOString()
-            },
-            {
-              id: "table_mock_2",
-              userId: "mockUserId",
-              name: "Table 2",
-              capacity: 8,
-              guests: [],
-              createdAt: new Date().toISOString()
-            },
-            {
-              id: "table_mock_3",
-              userId: "mockUserId",
-              name: "Table 3",
-              capacity: 8,
-              guests: [],
-              createdAt: new Date().toISOString()
-            }
-          ];
-          setTables(mockTables);
-          return;
-        }
-        
-        const tablesRef = collection(db, "tables");
-        const q = query(
-          tablesRef,
-          where("userId", "==", auth.currentUser.uid),
-          orderBy("createdAt", "asc")
-        );
-        
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-          // Create default tables if none exist
-          const defaultTables: TableAssignment[] = [
-            {
-              id: `table_${Date.now()}_1`,
-              userId: auth.currentUser.uid,
-              name: "Table 1",
-              capacity: 8,
-              guests: [],
-              createdAt: new Date().toISOString()
-            },
-            {
-              id: `table_${Date.now()}_2`,
-              userId: auth.currentUser.uid,
-              name: "Table 2",
-              capacity: 8,
-              guests: [],
-              createdAt: new Date().toISOString()
-            }
-          ];
-          
-          // Add tables to Firestore
-          const batch = writeBatch(db);
-          defaultTables.forEach(table => {
-            const tableRef = doc(db, "tables", table.id);
-            batch.set(tableRef, table);
-          });
-          
-          await batch.commit();
-          setTables(defaultTables);
-        } else {
-          // Load tables from Firestore
-          const tablesList = querySnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            guests: [] // We'll populate guests later
-          })) as unknown as TableAssignment[];
-          
-          setTables(tablesList);
-        }
-      } catch (error) {
-        console.error("Error fetching tables:", error);
-        toast.error("Failed to load tables");
-        
-        // Set default mock tables
-        const mockTables: TableAssignment[] = [
-          {
-            id: "table_mock_1",
-            userId: "mockUserId",
-            name: "Table 1",
-            capacity: 8,
-            guests: [],
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: "table_mock_2",
-            userId: "mockUserId",
-            name: "Table 2",
-            capacity: 8,
-            guests: [],
-            createdAt: new Date().toISOString()
-          }
-        ];
-        setTables(mockTables);
-      } finally {
-        setIsTableLoading(false);
-      }
-    };
-
     const loadData = async () => {
       await fetchGuests();
       await fetchTables();
@@ -1982,145 +1886,90 @@ const GuestList: React.FC = () => {
   // Synchronize guests with tables whenever either changes
   useEffect(() => {
     if (isLoading || isTableLoading) return;
-    
-    // Populate tables with their assigned guests
-    const updatedTables = tables.map(table => {
-      const tableGuests = guests.filter(guest => guest.tableId === table.id);
+
+    const updatedTables = tables.map((table) => {
+      const tableGuests = guests.filter((guest) => guest.tableId === table.id);
       return { ...table, guests: tableGuests };
     });
-    
+
     setTables(updatedTables);
   }, [guests, isLoading, isTableLoading]);
 
   // Handle guest assignment to tables
-  const handleAssignGuest = async (guestId: string, tableId: string | undefined) => {
-    // Find the guest
-    const guestToAssign = guests.find(g => g.id === guestId);
+  const handleAssignGuest = async (
+    guestId: string,
+    tableId: string | undefined
+  ) => {
+    const guestToAssign = guests.find((g) => g.id === guestId);
     if (!guestToAssign) return;
-    
-    // If the guest is already assigned to a table, remove them from that table
-    if (guestToAssign.tableId) {
-      const oldTable = tables.find(t => t.id === guestToAssign.tableId);
-      if (oldTable) {
-        setTables(prev => prev.map(t => 
-          t.id === oldTable.id 
-            ? { ...t, guests: t.guests.filter(g => g.id !== guestId) } 
-            : t
-        ));
-      }
+
+    // Update Firebase
+    try {
+      await updateDoc(doc(db, "guests", guestId), { tableId });
+    } catch (error) {
+      console.error("Error updating guest table assignment:", error);
+      toast.error("Failed to update table assignment");
     }
-    
-    // If tableId is undefined, we're just removing from the current table
-    if (tableId === undefined) {
-      setGuests(prev => prev.map(g => 
-        g.id === guestId ? { ...g, tableId: undefined } : g
-      ));
-      return;
-    }
-    
-    // Assign to the new table
-    const targetTable = tables.find(t => t.id === tableId);
-    if (!targetTable) return;
-    
-    // Check if the table is full
-    if (targetTable.guests.length >= targetTable.capacity) {
-      toast.error(`Table ${targetTable.name} is full`);
-      return;
-    }
-    
-    // Update the guests state
-    setGuests(prev => prev.map(g => 
-      g.id === guestId ? { ...g, tableId } : g
-    ));
-    
-    // If not using mock data, update in Firestore
-    if (!guestToAssign.id.startsWith("mock") && auth.currentUser) {
-      try {
-        await updateDoc(doc(db, "guests", guestId), {
-          tableId
-        });
-      } catch (error) {
-        console.error("Error updating guest table assignment:", error);
-        toast.error("Failed to update table assignment");
-      }
-    }
+
+    // Update local state
+    setGuests((prev) =>
+      prev.map((g) => (g.id === guestId ? { ...g, tableId } : g))
+    );
   };
   
   // Create a new table
   const handleCreateTable = async (tableName: string) => {
     const newTable: TableAssignment = {
       id: `table_${Date.now()}`,
-      userId: auth.currentUser?.uid || "mockUserId",
+      userId: auth.currentUser?.uid || "",
       name: tableName,
-      capacity: 8, // Fixed capacity as per requirements
+      capacity: 8,
       guests: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    
-    setTables(prev => [...prev, newTable]);
-    
-    // If not using mock data, save to Firestore
-    if (auth.currentUser) {
-      try {
-        await setDoc(doc(db, "tables", newTable.id), newTable);
-        toast.success(`Table "${tableName}" created successfully`);
-      } catch (error) {
-        console.error("Error creating table:", error);
-        toast.error("Failed to create table");
-      }
-    } else {
+
+    try {
+      // Add to Firebase
+      const docRef = await addDoc(collection(db, "tables"), newTable);
+      newTable.id = docRef.id;
+
+      // Update local state
+      setTables((prev) => [...prev, newTable]);
       toast.success(`Table "${tableName}" created successfully`);
+    } catch (error) {
+      console.error("Error creating table:", error);
+      toast.error("Failed to create table");
     }
   };
+
   
   // Delete a table
   const handleDeleteTable = async (tableId: string) => {
-    // Find the table to delete
-    const tableToDelete = tables.find(t => t.id === tableId);
-    if (!tableToDelete) return;
-    
-    // Confirm deletion if there are guests assigned
-    if (tableToDelete.guests.length > 0) {
-      if (!window.confirm(`Are you sure you want to delete table "${tableToDelete.name}"? All ${tableToDelete.guests.length} guests will be unassigned.`)) {
-        return;
-      }
-    }
-    
-    // Unassign all guests from this table
-    const guestsToUpdate = tableToDelete.guests.map(g => g.id);
-    
-    // Update guests state
-    setGuests(prev => prev.map(g => 
-      guestsToUpdate.includes(g.id) ? { ...g, tableId: undefined } : g
-    ));
-    
-    // Remove the table
-    setTables(prev => prev.filter(t => t.id !== tableId));
-    
-    // If not using mock data, delete from Firestore
-    if (!tableId.startsWith("table_mock") && auth.currentUser) {
-      try {
-        // Delete the table document
-        await deleteDoc(doc(db, "tables", tableId));
-        
-        // Update all guests that were assigned to this table
-        const batch = writeBatch(db);
-        guestsToUpdate.forEach(guestId => {
-          if (!guestId.startsWith("mock")) {
-            const guestRef = doc(db, "guests", guestId);
-            batch.update(guestRef, { tableId: null });
-          }
+    try {
+      // Delete from Firebase
+      await deleteDoc(doc(db, "tables", tableId));
+
+      // Unassign guests from this table
+      const batch = writeBatch(db);
+      guests
+        .filter((g) => g.tableId === tableId)
+        .forEach((guest) => {
+          batch.update(doc(db, "guests", guest.id), { tableId: null });
         });
-        
-        await batch.commit();
-        
-        toast.success(`Table "${tableToDelete.name}" deleted successfully`);
-      } catch (error) {
-        console.error("Error deleting table:", error);
-        toast.error("Failed to delete table");
-      }
-    } else {
-      toast.success(`Table "${tableToDelete.name}" deleted successfully`);
+      await batch.commit();
+
+      // Update local state
+      setTables((prev) => prev.filter((t) => t.id !== tableId));
+      setGuests((prev) =>
+        prev.map((g) =>
+          g.tableId === tableId ? { ...g, tableId: undefined } : g
+        )
+      );
+
+      toast.success("Table deleted successfully");
+    } catch (error) {
+      console.error("Error deleting table:", error);
+      toast.error("Failed to delete table");
     }
   };
   
@@ -2463,20 +2312,7 @@ const GuestList: React.FC = () => {
             />
             <span>Individual</span>
           </button>
-          <button
-            onClick={() => setActiveView("table")}
-            className={`inline-flex items-center px-3 py-4 text-[14px] font-semibold rounded-[12px] ${activeView === "table" ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              } ${inter.className}`}
-          >
-            <Image
-              src={activeView === "table" ? VIEW_ICONS.table.active : VIEW_ICONS.table.inactive}
-              alt="Table icon"
-              className="w-5 h-5 mr-2"
-              width={20}
-              height={20}
-            />
-            <span>Table Wise</span>
-          </button>
+          
         </div>
 
         {/* Table Wise View */}

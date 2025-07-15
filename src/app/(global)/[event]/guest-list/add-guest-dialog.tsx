@@ -24,13 +24,14 @@ export default function AddGuestDialog({ open, onOpenChange, onGuestAdded }: Add
   const [contactNumber, setContactNumber] = useState("")
   const [foodPreference, setFoodPreference] = useState<"Veg" | "Non Veg">("Veg")
 
-   const normalizedEvent = String(event).charAt(0).toUpperCase() + String(event).slice(1).toLowerCase()
+   const normalizedEvent = decodeURIComponent(String(event)).toLowerCase()
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!auth.currentUser) return
 
     setIsLoading(true)
+    alert(`Adding guest for event: ${normalizedEvent}`)
     try {
       const guestData = {
         userId: auth.currentUser.uid,

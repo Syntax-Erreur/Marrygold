@@ -46,7 +46,7 @@ const WeddingPlanner: React.FC = () => {
           const userEvents = await fetchUserEvents(auth.currentUser.uid)
 
           if (userEvents.length === 0) {
-            await setupDefaultEventsForUser(auth.currentUser.uid)
+            // await setupDefaultEventsForUser(auth.currentUser.uid)
             const updatedEvents = await fetchUserEvents(auth.currentUser.uid)
             setEvents(updatedEvents)
           } else {
@@ -108,11 +108,11 @@ const WeddingPlanner: React.FC = () => {
         }}
       />
 
-      <div className="w-full px-4 sm:px-8 md:px-20   pt-5 md:pt-10 rounded-[20px] md:rounded-[40px] max-md:max-w-full">
+      <div className="w-full px-4 sm:px-8 md:px-20 pt-2  rounded-[20px] md:rounded-[40px] max-md:max-w-full">
         <div className="w-full max-w-full md:max-w-[1568px]">
 
 
-          <div className="flex w-full items-center justify-between pr-2 md:pr-6 py-4 md:py-6 z-50 relative">
+          <div className="flex w-full items-center justify-between py-4 md:py-6 z-50 relative">
             <div className="text-[#252525] text-[16px] md:text-[19px] font-bold tracking-[0.15em] uppercase font-jakarta">logo</div>
 
 
@@ -168,14 +168,14 @@ const WeddingPlanner: React.FC = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                    {/* <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-gray-600 hover:text-gray-900">
                       <User className="w-4 h-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-gray-600 hover:text-gray-900">
                       <Settings className="w-4 h-4" />
                       Settings
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="cursor-pointer flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"

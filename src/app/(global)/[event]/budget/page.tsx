@@ -26,7 +26,7 @@ interface Payment {
 interface Event {
   id: string;
   name: string;
-  totalBudget: number;
+  budget: number;
   totalSpending: number;
   userId: string;
   createdAt: string;
@@ -234,7 +234,7 @@ const EventBudgetPage: React.FC = () => {
             >
               <BudgetCard
                 title={evt.name}
-                totalBudget={evt.budgetTarget || evt.totalBudget || 0}
+                totalBudget={evt.budgetTarget || evt.budget || 0}
                 totalSpending={evt.totalSpending || 0}
                 iconSrc={getEventIcon(evt.name)}
                 iconBgColor={getEventBgColor(evt.themeColorIndex)}
@@ -260,14 +260,14 @@ const EventBudgetPage: React.FC = () => {
 
             <BudgetChart
               eventName={`${event.name} Budget`}
-              budget={`${event.totalSpending || 0}$/${event.budgetTarget || event.totalBudget || 0}$`}
+              budget={`${event.totalSpending || 0}$/${event.budget || event.totalBudget || 0}$`}
               iconSrc={getEventIcon(event.name)}
               paymentTypes={payments.map((payment, index) => ({
                 name: payment.name,
                 value: payment.amount,
                 color: [
                   "#6174F1", "#76CA66", "#FFA053", "#22C3E6", "#985FEA", "#FB5A3F"
-                ][index % 6]
+                ][index % 6]  
               }))}
             />
           </section>

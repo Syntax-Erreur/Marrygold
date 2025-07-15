@@ -46,7 +46,9 @@ export const DEFAULT_EVENTS: FirestoreEventData[] = [
 
 export async function fetchUserEvents(userId: string | null): Promise<(FirestoreEventData & { id: string })[]> {
     try {
+
         if (!userId) {
+
             return DEFAULT_EVENTS.map((event, index) => ({
                 ...event,
                 id: `default-${index}`
@@ -74,12 +76,12 @@ export async function fetchUserEvents(userId: string | null): Promise<(Firestore
             )
 
             // If no user events, return defaults
-            if (userEvents.length === 0) {
-                return DEFAULT_EVENTS.map((event, index) => ({
-                    ...event,
-                    id: `default-${index}`
-                }))
-            }
+            // if (userEvents.length === 0) {
+            //     return DEFAULT_EVENTS.map((event, index) => ({
+            //         ...event,
+            //         id: `default-${index}`
+            //     }))
+            // }
 
             return userEvents
         } catch (error) {

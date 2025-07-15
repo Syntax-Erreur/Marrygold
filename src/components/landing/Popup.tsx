@@ -62,12 +62,12 @@ export const Popup: React.FC<PopupProps> = ({ isOpen, onClose, anchorEl, eventDa
         text: "Ceremony Research",
         href: `/${eventName}/ceremony-research`
       },
-      {
-        id: "mood-board",
-        iconSrc: "https://res.cloudinary.com/dvfk4g3wh/image/upload/v1743442899/Cardholder_mhamqi.png",
-        text: "Mood Board",
-        href: `/${eventName}/mood-board`
-      },
+      // {
+      //   id: "mood-board",
+      //   iconSrc: "https://res.cloudinary.com/dvfk4g3wh/image/upload/v1743442899/Cardholder_mhamqi.png",
+      //   text: "Mood Board",
+      //   href: `/${eventName}/mood-board`
+      // },
       {
         id: "payment-reminder",
         iconSrc: "https://res.cloudinary.com/dvfk4g3wh/image/upload/v1743443082/Wallet_Money_ntauva.png",
